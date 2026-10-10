@@ -53,7 +53,3 @@ uvicorn app.main:app --reload
 - [ ] W2：DeepSeek API + SSE 流式 + 文档解析分块 + Embedding
 - [ ] W3：pgvector 入库检索 + RAG 组装 + 引用拒答 + MySQL 对话记录
 - [ ] W4：Docker 部署 + 前端页面 + 上线
-
-## 面试要点（学技术用）
-
-每完成一个模块，需要能回答三个问题：它做什么、怎么实现的、为什么这样设计。

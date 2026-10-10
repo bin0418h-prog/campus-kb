@@ -49,7 +49,8 @@ uvicorn app.main:app --reload
 
 ## 开发进度
 
-- [ ] W1：Python 基础强化 + FastAPI 第一个接口
-- [ ] W2：DeepSeek API + SSE 流式 + 文档解析分块 + Embedding
+- [x] W1：Python 基础强化 + FastAPI 第一个接口
+- [x] W2：DeepSeek API + SSE 流式 + Embedding
+- [ ] W2：文档解析 + 分块
 - [ ] W3：pgvector 入库检索 + RAG 组装 + 引用拒答 + MySQL 对话记录
 - [ ] W4：Docker 部署 + 前端页面 + 上线

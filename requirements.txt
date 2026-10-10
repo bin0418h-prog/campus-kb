@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+openai
+python-dotenv
+pymupdf
+python-docx
+psycopg[binary]
+pgvector
+sqlalchemy
+pymysql
+jieba

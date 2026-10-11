@@ -8,8 +8,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from . import config
-from .db import init_db, insert_chunks, search_similar
-from .services import embedding, llm, parser, splitter
+from .db import init_db, insert_chunks
+from .services import embedding, llm, parser, retriever, splitter
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -18,6 +18,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()  # 启动时建扩展/建表/建索引
+    retriever.build_index()  # 把库里全部文档块加载进内存，构建 BM25 索引
     yield
 
 
@@ -54,18 +55,17 @@ async def upload(file: UploadFile):
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    """流式问答：问题向量化 → 检索 → 拒答判断 → 大模型生成（SSE）"""
-    query_vec = embedding.embed_texts([req.question])[0]
-    hits = search_similar(query_vec, top_k=4)  # [(doc_name, content, similarity)]
+    """流式问答：混合检索 → 拒答判断 → 大模型生成（SSE）"""
+    hits, max_sim = retriever.hybrid_search(req.question, top_k=4)
 
     async def generate():
         yield sse({"event": "start"})
-        if not hits or hits[0][2] < config.REJECT_THRESHOLD:
-            # 拒答：最相关的内容相似度也过低，说明知识库里没有答案，不调大模型
+        if not hits or max_sim < config.REJECT_THRESHOLD:
+            # 拒答：向量路最高相似度也低于阈值，说明知识库里没有答案，不调大模型
             yield sse({"event": "token", "text": "资料中没有相关信息。"})
         else:
-            sources = [{"doc": h[0], "similarity": round(h[2], 3)} for h in hits]
-            yield sse({"event": "sources", "data": sources})
+            docs = sorted({h[0] for h in hits})  # 引用溯源：答案来自哪些文档
+            yield sse({"event": "sources", "data": [{"doc": d} for d in docs]})
             for token in llm.stream_answer(req.question, [(h[0], h[1]) for h in hits]):
                 yield sse({"event": "token", "text": token})
         yield sse({"event": "done"})

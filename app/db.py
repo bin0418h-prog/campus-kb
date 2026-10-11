@@ -50,6 +50,13 @@ def insert_chunks(doc_name: str, chunks: list[str], embeddings: list[list[float]
             )
 
 
+def get_all_chunks() -> list[tuple]:
+    """读出全部 (doc_name, content)，用于构建内存中的 BM25 索引"""
+    with engine.connect() as conn:
+        rows = conn.execute(text("SELECT doc_name, content FROM chunks")).fetchall()
+    return [(r.doc_name, r.content) for r in rows]
+
+
 def search_similar(query_embedding: list[float], top_k: int = 4) -> list[tuple]:
     """余弦相似度检索，返回 [(doc_name, content, similarity)]，按相似度降序"""
     with engine.connect() as conn:

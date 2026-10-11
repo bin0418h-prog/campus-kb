@@ -44,7 +44,7 @@ def insert_chunks(doc_name: str, chunks: list[str], embeddings: list[list[float]
             conn.execute(
                 text(
                     "INSERT INTO chunks (doc_name, content, embedding) "
-                    "VALUES (:d, :c, :e::vector)"
+                    "VALUES (:d, :c, CAST(:e AS vector))"
                 ),
                 {"d": doc_name, "c": content, "e": _vec_str(emb)},
             )
@@ -63,9 +63,9 @@ def search_similar(query_embedding: list[float], top_k: int = 4) -> list[tuple]:
         rows = conn.execute(
             text(
                 """
-                SELECT doc_name, content, 1 - (embedding <=> :q::vector) AS similarity
+                SELECT doc_name, content, 1 - (embedding <=> CAST(:q AS vector)) AS similarity
                 FROM chunks
-                ORDER BY embedding <=> :q::vector
+                ORDER BY embedding <=> CAST(:q AS vector)
                 LIMIT :k
                 """
             ),

@@ -9,3 +9,4 @@ pgvector
 sqlalchemy
 pymysql
 jieba
+python-multipart

@@ -12,9 +12,12 @@ SYSTEM_PROMPT = (
 )
 
 
-def build_messages(question: str, context_chunks: list[str]) -> list[dict]:
-    """把检索到的资料片段拼进提示词，连同问题一起发给模型"""
-    context = "\n\n".join(f"[资料{i + 1}] {text}" for i, text in enumerate(context_chunks))
+def build_messages(question: str, context_chunks: list[tuple[str, str]]) -> list[dict]:
+    """把检索到的资料片段拼进提示词，连同问题一起发给模型。
+    context_chunks 每一项是 (文档名, 内容)，文档名用于引用溯源"""
+    context = "\n\n".join(
+        f"[资料{i + 1} · 来自《{doc}》] {text}" for i, (doc, text) in enumerate(context_chunks)
+    )
     user_content = f"参考资料：\n{context}\n\n问题：{question}"
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
@@ -22,7 +25,7 @@ def build_messages(question: str, context_chunks: list[str]) -> list[dict]:
     ]
 
 
-def stream_answer(question: str, context_chunks: list[str]):
+def stream_answer(question: str, context_chunks: list[tuple[str, str]]):
     """逐 token 生成回答。返回生成器，供 SSE 接口逐个转发给前端"""
     response = _client.chat.completions.create(
         model=config.DEEPSEEK_MODEL,

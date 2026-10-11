@@ -57,6 +57,12 @@ def get_all_chunks() -> list[tuple]:
     return [(r.doc_name, r.content) for r in rows]
 
 
+def delete_by_doc(doc_name: str):
+    """按文档名删除全部块（重新入库前先清旧数据）"""
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM chunks WHERE doc_name = :d"), {"d": doc_name})
+
+
 def search_similar(query_embedding: list[float], top_k: int = 4) -> list[tuple]:
     """余弦相似度检索，返回 [(doc_name, content, similarity)]，按相似度降序"""
     with engine.connect() as conn:

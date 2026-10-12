@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校园知识库 · CampusKB</title>
+<style>
+  :root {
+    --paper: #f6f3ea;
+    --paper-deep: #efe8d7;
+    --card: #fbf9f2;
+    --ink: #1f1d18;
+    --ink-soft: #6b6557;
+    --ink-faint: #9a927e;
+    --seal: #b23a2e;
+    --seal-dark: #8f2d23;
+    --line: #d9d1bc;
+    --gold: #c9a45c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* 纸张颗粒质感 */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    opacity: .5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.045'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ========== 顶栏 ========== */
+  header {
+    height: 64px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(246,243,234,.95), rgba(246,243,234,.88));
+    backdrop-filter: blur(6px);
+    position: relative;
+    z-index: 10;
+  }
+
+  /* 朱红印章 */
+  .seal {
+    width: 40px; height: 40px;
+    border: 3px solid var(--seal);
+    border-radius: 4px;
+    display: grid;
+    place-items: center;
+    color: var(--seal);
+    font-family: Georgia, "Songti SC", "STSong", SimSun, serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 2px;
+    text-align: center;
+    transform: rotate(-6deg);
+    transition: transform .35s cubic-bezier(.2,.8,.3,1.2);
+    user-select: none;
+  }
+  .seal:hover { transform: rotate(0deg) scale(1.06); }
+
+  .brand { display: flex; flex-direction: column; }
+  .brand .cn {
+    font-family: Georgia, "Songti SC", "STSong", SimSun, serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 3px;
+  }
+  .brand .en {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+
+  .archives-count {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    background: var(--card);
+    padding: 6px 12px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+
+  .btn-upload {
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--paper);
+    background: var(--seal);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+  }
+  .btn-upload:hover { background: var(--seal-dark); transform: translateY(-1px); }
+  .btn-upload:active { transform: translateY(0); }
+
+  /* ========== 主体 ========== */
+  .layout { flex: 1; display: flex; min-height: 0; }
+
+  /* 侧栏 */
+  aside {
+    width: 284px;
+    flex: none;
+    border-right: 1px solid var(--line);
+    background: var(--paper-deep);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px 18px;
+    gap: 22px;
+  }
+
+  .side-title {
+    font-family: Georgia, "Songti SC", SimSun, serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .side-title::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+
+  .upload-zone {
+    border: 1.5px dashed var(--line);
+    border-radius: 3px;
+    padding: 20px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: rgba(251,249,242,.5);
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--seal); background: rgba(178,58,46,.05); }
+  .upload-zone .glyph {
+    font-family: Georgia, serif;
+    font-size: 22px;
+    color: var(--seal);
+    margin-bottom: 6px;
+  }
+  .upload-zone p { font-size: 12.5px; color: var(--ink-soft); line-height: 1.7; }
+  .upload-zone .hint { font-family: "Courier New", monospace; font-size: 10.5px; color: var(--ink-faint); }
+
+  .doc-list { display: flex; flex-direction: column; gap: 8px; }
+  .doc-item {
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 9px 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeUp .4s ease both;
+  }
+  .doc-item .doc-icon { font-family: Georgia, serif; color: var(--seal); font-weight: 700; }
+  .doc-item .doc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .doc-item .doc-chunks { font-family: "Courier New", monospace; font-size: 10px; color: var(--ink-faint); }
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-item {
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--line);
+    padding: 8px 2px;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color .15s;
+  }
+  .history-item:hover { color: var(--seal); }
+  .history-item time { font-family: "Courier New", monospace; font-size: 10px; color: var(--ink-faint); display: block; margin-bottom: 2px; }
+
+  .side-empty { font-size: 12px; color: var(--ink-faint); text-align: center; padding: 14px 0; }
+
+  /* 聊天区 */
+  .chat-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(31,29,24,.035) 32px);
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px clamp(20px, 6vw, 72px);
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    scroll-behavior: smooth;
+  }
+
+  .welcome { margin: auto; text-align: center; max-width: 460px; padding: 40px 0; animation: fadeUp .6s ease both; }
+  .welcome .big {
+    font-family: Georgia, "Songti SC", "STSong", SimSun, serif;
+    font-size: 30px;
+    letter-spacing: 6px;
+    margin-bottom: 10px;
+  }
+  .welcome .sub { font-size: 13.5px; color: var(--ink-soft); line-height: 1.9; margin-bottom: 28px; }
+  .welcome .examples { display: flex; flex-direction: column; gap: 10px; }
+  .example-chip {
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 11px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .2s, transform .2s, box-shadow .2s;
+  }
+  .example-chip:hover {
+    border-color: var(--seal);
+    transform: translateX(4px);
+    box-shadow: 3px 3px 0 rgba(178,58,46,.12);
+  }
+  .example-chip .no { font-family: "Courier New", monospace; color: var(--seal); margin-right: 10px; font-size: 11px; }
+
+  /* 消息 */
+  .msg { display: flex; flex-direction: column; max-width: 76%; animation: fadeUp .45s cubic-bezier(.2,.7,.3,1) both; }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.assistant { align-self: flex-start; align-items: flex-start; }
+
+  .bubble {
+    font-size: 14.5px;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.user .bubble {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 18px;
+    border-radius: 2px;
+  }
+  .msg.assistant .bubble {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 14px 18px;
+    border-radius: 2px;
+    box-shadow: 2px 2px 0 rgba(31,29,24,.05);
+  }
+
+  .streaming::after {
+    content: "▍";
+    color: var(--seal);
+    animation: blink 1s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .sources { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .source-chip {
+    font-size: 11px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
+    border-radius: 2px;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(251,249,242,.6);
+    animation: fadeUp .4s ease both;
+  }
+  .source-chip .mark { color: var(--seal); font-family: Georgia, serif; }
+
+  .msg-meta {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    margin-top: 7px;
+    letter-spacing: .5px;
+  }
+
+  .status {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 2px;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: .45; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* 输入区 */
+  .composer {
+    flex: none;
+    border-top: 1px solid var(--line);
+    background: var(--paper-deep);
+    padding: 16px clamp(20px, 6vw, 72px) 20px;
+  }
+  .composer-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 10px 10px 10px 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .composer-inner:focus-within { border-color: var(--ink-soft); box-shadow: 3px 3px 0 rgba(31,29,24,.08); }
+
+  #input {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    max-height: 120px;
+    padding: 4px 0;
+  }
+  #input::placeholder { color: var(--ink-faint); }
+
+  .btn-send {
+    width: 44px; height: 44px;
+    flex: none;
+    border: 2.5px solid var(--seal);
+    border-radius: 3px;
+    background: var(--seal);
+    color: var(--paper);
+    font-family: Georgia, "Songti SC", SimSun, serif;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+  }
+  .btn-send:hover { background: var(--seal-dark); border-color: var(--seal-dark); }
+  .btn-send:active { transform: scale(.94); }
+  .btn-send:disabled { background: var(--line); border-color: var(--line); cursor: not-allowed; }
+
+  /* 提示浮层 */
+  .toast {
+    position: fixed;
+    bottom: 110px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 13px;
+    padding: 10px 22px;
+    border-radius: 2px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all .35s;
+    z-index: 1000;
+    letter-spacing: 1px;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px) {
+    aside { display: none; }
+    .msg { max-width: 92%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="seal">校园<br>文库</div>
+  <div class="brand">
+    <span class="cn">校园知识库</span>
+    <span class="en">Campus Knowledge Base</span>
+  </div>
+  <div class="header-right">
+    <span class="archives-count" id="archives-count">馆藏载入中…</span>
+    <button class="btn-upload" id="btn-upload">入库档案</button>
+    <input type="file" id="file-input" accept=".pdf,.docx,.md,.txt" hidden multiple>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div>
+      <div class="side-title">档案入库</div>
+      <div class="upload-zone" id="upload-zone">
+        <div class="glyph">＋</div>
+        <p>拖入 PDF / Word 文档<br>或点击选择文件</p>
+        <p class="hint">.pdf .docx .md .txt</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="side-title">馆藏文档</div>
+      <div class="doc-list" id="doc-list"><p class="side-empty">载入中…</p></div>
+    </div>
+
+    <div>
+      <div class="side-title">查档记录</div>
+      <div class="history-list" id="history-list"><p class="side-empty">暂无记录</p></div>
+    </div>
+  </aside>
+
+  <div class="chat-wrap">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="big">问你所问 · 查有所据</div>
+        <p class="sub">校园知识库智能问答系统<br>每一句回答，都溯源至馆藏档案</p>
+        <div class="examples">
+          <button class="example-chip"><span class="no">01</span>学生证丢了怎么补办？</button>
+          <button class="example-chip"><span class="no">02</span>新生网上报到流程是什么？</button>
+          <button class="example-chip"><span class="no">03</span>图书馆几点开门？</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="composer-inner">
+        <textarea id="input" rows="1" placeholder="向知识库提问，例如：缓考怎么申请？"></textarea>
+        <button class="btn-send" id="btn-send" title="发送">询</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const messagesEl = $("#messages"), inputEl = $("#input"), sendBtn = $("#btn-send");
+const welcomeEl = $("#welcome");
+let busy = false;
+
+/* ---------- 工具 ---------- */
+function nowTime() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function toast(text) {
+  const t = $("#toast");
+  t.textContent = text;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2600);
+}
+function esc(s) {
+  const div = document.createElement("div");
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+/* ---------- 消息渲染 ---------- */
+function addUserMsg(text) {
+  welcomeEl?.remove();
+  const el = document.createElement("div");
+  el.className = "msg user";
+  el.innerHTML = `<div class="bubble">${esc(text)}</div><div class="msg-meta">${nowTime()}</div>`;
+  messagesEl.appendChild(el);
+  scrollBottom();
+  return el;
+}
+
+function addAssistantMsg() {
+  welcomeEl?.remove();
+  const el = document.createElement("div");
+  el.className = "msg assistant";
+  el.innerHTML = `<div class="bubble"><span class="status">正在检索档案…</span></div>`;
+  messagesEl.appendChild(el);
+  scrollBottom();
+  return el;
+}
+
+function scrollBottom() {
+  requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
+}
+
+/* ---------- SSE 流式问答 ---------- */
+async function ask(question) {
+  if (busy || !question.trim()) return;
+  busy = true;
+  sendBtn.disabled = true;
+
+  addUserMsg(question.trim());
+  const msgEl = addAssistantMsg();
+  const bubble = msgEl.querySelector(".bubble");
+  let phase = "searching"; // searching -> streaming
+  let sourcesShown = false;
+
+  try {
+    const resp = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question.trim() }),
+    });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const raw = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        const line = raw.startsWith("data: ") ? raw.slice(6) : raw;
+        if (!line || line === "[DONE]") continue;
+        const evt = JSON.parse(line);
+
+        if (evt.event === "sources" && !sourcesShown) {
+          sourcesShown = true;
+          const wrap = document.createElement("div");
+          wrap.className = "sources";
+          for (const s of evt.data) {
+            wrap.innerHTML += `<span class="source-chip"><span class="mark">❧</span>${esc(s.doc)}</span>`;
+          }
+          msgEl.appendChild(wrap);
+        } else if (evt.event === "token") {
+          if (phase !== "streaming") {
+            phase = "streaming";
+            bubble.innerHTML = "";
+            bubble.classList.add("streaming");
+          }
+          bubble.textContent += evt.text;
+          scrollBottom();
+        }
+      }
+    }
+  } catch (err) {
+    bubble.innerHTML = "";
+    bubble.textContent = "请求失败：" + err.message + "。请确认服务已启动。";
+  } finally {
+    bubble.classList.remove("streaming");
+    msgEl.innerHTML += `<div class="msg-meta">${nowTime()}</div>`;
+    busy = false;
+    sendBtn.disabled = false;
+    inputEl.focus();
+    loadHistory();
+  }
+}
+
+/* ---------- 上传 ---------- */
+async function uploadFiles(files) {
+  if (!files.length) return;
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const resp = await fetch("/upload", { method: "POST", body: fd });
+      const data = await resp.json();
+      toast(`《${data.doc}》已入库 ${data.chunks} 块`);
+    } catch (err) {
+      toast("入库失败：" + err.message);
+    }
+  }
+  loadDocs();
+}
+
+/* ---------- 加载档案与历史 ---------- */
+async function loadDocs() {
+  try {
+    const data = await (await fetch("/documents")).json();
+    const list = $("#doc-list");
+    const total = data.items.reduce((s, i) => s + i.chunks, 0);
+    $("#archives-count").textContent = `馆藏 ${data.items.length} 卷 · ${total} 条`;
+    if (!data.items.length) {
+      list.innerHTML = `<p class="side-empty">馆藏为空，先入库一份文档</p>`;
+      return;
+    }
+    list.innerHTML = data.items.map((i, k) =>
+      `<div class="doc-item" style="animation-delay:${k * 60}ms">
+         <span class="doc-icon">§</span>
+         <span class="doc-name" title="${esc(i.doc)}">${esc(i.doc)}</span>
+         <span class="doc-chunks">${i.chunks}块</span>
+       </div>`).join("");
+  } catch { /* 忽略 */ }
+}
+
+async function loadHistory() {
+  try {
+    const data = await (await fetch("/history")).json();
+    const list = $("#history-list");
+    if (!data.items.length) {
+      list.innerHTML = `<p class="side-empty">暂无记录</p>`;
+      return;
+    }
+    list.innerHTML = data.items.map((i) =>
+      `<button class="history-item" title="${esc(i.question)}">
+         <time>${esc((i.created_at || "").slice(5, 16))}</time>${esc(i.question)}
+       </button>`).join("");
+    list.querySelectorAll(".history-item").forEach((btn) => {
+      btn.addEventListener("click", () => { inputEl.value = btn.title; inputEl.focus(); });
+    });
+  } catch { /* 忽略 */ }
+}
+
+/* ---------- 事件 ---------- */
+sendBtn.addEventListener("click", () => { const q = inputEl.value; inputEl.value = ""; ask(q); });
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); const q = inputEl.value; inputEl.value = ""; ask(q); }
+});
+
+$("#btn-upload").addEventListener("click", () => $("#file-input").click());
+$("#file-input").addEventListener("change", (e) => { uploadFiles(e.target.files); e.target.value = ""; });
+const zone = $("#upload-zone");
+zone.addEventListener("click", () => $("#file-input").click());
+zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag"); });
+zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
+zone.addEventListener("drop", (e) => { e.preventDefault(); zone.classList.remove("drag"); uploadFiles(e.dataTransfer.files); });
+
+document.querySelectorAll(".example-chip").forEach((chip) =>
+  chip.addEventListener("click", () => ask(chip.textContent.replace(/^\d+\s*/, ""))));
+
+loadDocs();
+loadHistory();
+</script>
+</body>
+</html>

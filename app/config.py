@@ -18,5 +18,8 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
 # PostgreSQL + pgvector
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/campuskb")
 
+# MySQL（对话历史）
+MYSQL_URL = os.getenv("MYSQL_URL", "mysql+pymysql://root:root@localhost:3306/campuskb")
+
 # 拒答阈值：检索最高相似度低于它时直接拒答，不调用大模型（防幻觉）
 REJECT_THRESHOLD = float(os.getenv("REJECT_THRESHOLD", "0.4"))

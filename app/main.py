@@ -3,8 +3,8 @@ import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi import FastAPI, File, Header, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -53,8 +53,12 @@ def health():
 
 
 @app.post("/upload")
-async def upload(file: UploadFile):
-    """上传文档 → 解析 → 分块 → 向量化 → 入库，四步一气呵成"""
+async def upload(file: UploadFile, x_admin_password: str = Header("")):
+    """上传文档（管理员鉴权）→ 解析 → 分块 → 向量化 → 入库。
+    请求头 X-Admin-Password 需与配置一致，防止匿名上传污染知识库"""
+    if x_admin_password != config.ADMIN_PASSWORD:
+        return JSONResponse(status_code=401, content={"detail": "管理员密码错误"})
+
     path = UPLOAD_DIR / file.filename
     path.write_bytes(await file.read())
 

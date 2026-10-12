@@ -577,13 +577,33 @@ async function ask(question) {
 }
 
 /* ---------- 上传 ---------- */
+function getAdminPassword() {
+  let pwd = sessionStorage.getItem("kb_admin_pwd");
+  if (!pwd) {
+    pwd = prompt("请输入管理员密码（入库鉴权）：");
+    if (pwd) sessionStorage.setItem("kb_admin_pwd", pwd);
+  }
+  return pwd || "";
+}
+
 async function uploadFiles(files) {
   if (!files.length) return;
+  const pwd = getAdminPassword();
+  if (!pwd) return;
   for (const file of files) {
     const fd = new FormData();
     fd.append("file", file);
     try {
-      const resp = await fetch("/upload", { method: "POST", body: fd });
+      const resp = await fetch("/upload", {
+        method: "POST",
+        body: fd,
+        headers: { "X-Admin-Password": pwd },
+      });
+      if (resp.status === 401) {
+        sessionStorage.removeItem("kb_admin_pwd");
+        toast("管理员密码错误，请重试");
+        return;
+      }
       const data = await resp.json();
       toast(`《${data.doc}》已入库 ${data.chunks} 块`);
     } catch (err) {

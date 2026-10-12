@@ -23,3 +23,6 @@ MYSQL_URL = os.getenv("MYSQL_URL", "mysql+pymysql://root:root@localhost:3306/cam
 
 # 拒答阈值：检索最高相似度低于它时直接拒答，不调用大模型（防幻觉）
 REJECT_THRESHOLD = float(os.getenv("REJECT_THRESHOLD", "0.4"))
+
+# 上传接口的管理员密码（防知识库投毒）
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")

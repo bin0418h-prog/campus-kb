@@ -24,6 +24,10 @@
 | 数据库 | MySQL |
 | 部署 | Docker / Docker Compose |
 
+## 界面
+
+![CampusKB 界面截图](docs/screenshot.png)
+
 ## 架构
 
 ```text

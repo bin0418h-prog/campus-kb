@@ -66,6 +66,7 @@ async def upload(file: UploadFile, x_admin_password: str = Header("")):
     chunks = splitter.split_text(text)  # 2. 结构感知分块
     vectors = embedding.embed_texts(chunks)  # 3. bge-m3 向量化
     insert_chunks(file.filename, chunks, vectors)  # 4. 写入 pgvector
+    retriever.build_index()  # 5. 重建内存 BM25 索引，新文档立即可被关键词检索
 
     return {"doc": file.filename, "chars": len(text), "chunks": len(chunks)}
 

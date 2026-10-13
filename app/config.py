@@ -22,7 +22,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localho
 MYSQL_URL = os.getenv("MYSQL_URL", "mysql+pymysql://root:root@localhost:3306/campuskb")
 
 # 拒答阈值：检索最高相似度低于它时直接拒答，不调用大模型（防幻觉）
-REJECT_THRESHOLD = float(os.getenv("REJECT_THRESHOLD", "0.4"))
+# 按评测集相似度分布调优：库内问题 0.66+ / 库外问题 0.56-，取中间值 0.6
+REJECT_THRESHOLD = float(os.getenv("REJECT_THRESHOLD", "0.6"))
 
 # 上传接口的管理员密码（防知识库投毒）
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")

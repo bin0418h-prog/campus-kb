@@ -1,0 +1,22 @@
+[
+  {"question": "学生证丢了怎么补办？", "expect": "answer"},
+  {"question": "学生证补办要带什么材料？", "expect": "answer"},
+  {"question": "补办学生证去哪里办理？", "expect": "answer"},
+  {"question": "学生证补办的办公时间是什么时候？", "expect": "answer"},
+  {"question": "学生证丢了要联系哪个部门？", "expect": "answer"},
+  {"question": "新生网上报到流程是什么？", "expect": "answer"},
+  {"question": "迎新系统怎么登录？", "expect": "answer"},
+  {"question": "报到系统账号怎么激活？", "expect": "answer"},
+  {"question": "新生报到在哪个系统里完成？", "expect": "answer"},
+  {"question": "网上报到什么时候开始？", "expect": "answer"},
+  {"question": "食堂几点开门？", "expect": "reject"},
+  {"question": "学校里有奶茶店吗？", "expect": "reject"},
+  {"question": "宿舍怎么分配？", "expect": "reject"},
+  {"question": "奖学金怎么申请？", "expect": "reject"},
+  {"question": "高数考试什么时候？", "expect": "reject"},
+  {"question": "校医院在哪里？", "expect": "reject"},
+  {"question": "篮球场晚上开灯吗？", "expect": "reject"},
+  {"question": "怎么办理校园网宽带？", "expect": "reject"},
+  {"question": "明天天气怎么样？", "expect": "reject"},
+  {"question": "图书馆借书能借多久？", "expect": "reject"}
+]

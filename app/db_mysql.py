@@ -3,7 +3,8 @@ from sqlalchemy import create_engine, text
 
 from . import config
 
-engine = create_engine(config.MYSQL_URL)
+# pool_pre_ping：容器重启后自动丢弃失效连接，避免第一条请求报 Broken pipe
+engine = create_engine(config.MYSQL_URL, pool_pre_ping=True, pool_recycle=3600)
 
 
 def init_db():

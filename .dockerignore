@@ -1,0 +1,10 @@
+.venv/
+.git/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+uploads/
+docs/
+学习笔记.md
+.env
+.env.example

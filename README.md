@@ -52,3 +52,7 @@ docker compose up -d
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
+
+## 服务器部署
+
+Docker Compose 生产部署（应用 + pgvector + MySQL，数据库端口不暴露公网）见 [docs/deploy.md](docs/deploy.md)。
